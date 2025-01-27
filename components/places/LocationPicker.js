@@ -3,14 +3,16 @@ import OutlinedButton from "../ui/OutlinedButton";
 import { Colors } from "../../constants/colors";
 import { getCurrentPositionAsync, PermissionStatus, useForegroundPermissions } from "expo-location";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useNavigation, useRoute, useIsFocused } from "@react-navigation/native";
+import { getAddress } from "../../util/locations";
 
-export default function LocationPicker(){
+export default function LocationPicker({onLocationPicked}){
     const navigation = useNavigation();
     const route = useRoute();
     const [permissionInfo, requestPermission] = useForegroundPermissions();
     const [mapUri, steMapUri] = useState();
+    const [ loc, setLoc] = useState();
     const isFocused = useIsFocused();
 
     
@@ -23,8 +25,20 @@ export default function LocationPicker(){
             const url = `https://atlas.microsoft.com/map/static/png?subscription-key=${process.env.EXPO_PUBLIC_API_KEY}&api-version=1.0&center=${long},${lat}&zoom=13`;
             //console.log(url);
             steMapUri(url);
+            setLoc({lat: lat, long: long});
         }
     }, [route, isFocused]);
+
+    useEffect(() => {
+        async function helper(){
+            if(loc){
+                const address = await getAddress(loc.lat, loc.long);
+                onLocationPicked({...loc, address: address});
+            }
+            
+        }
+        helper();
+    }, [loc, onLocationPicked]);
 
     async function verifyPermissions(){
         if(permissionInfo.status === PermissionStatus.UNDETERMINED){
@@ -58,6 +72,7 @@ export default function LocationPicker(){
         const url = `https://atlas.microsoft.com/map/static/png?subscription-key=${process.env.EXPO_PUBLIC_API_KEY}&api-version=1.0&center=${long},${lat}&zoom=13`;
         //console.log(url);
         steMapUri(url);
+        setLoc({lat: lat, long: long});
     }
 
     function pickOnMapHandler(){
@@ -84,7 +99,7 @@ export default function LocationPicker(){
 const styles = StyleSheet.create({
     mapPreview: {
         width: '100%',
-        height: 400,
+        height: 300,
         marginVertical: 8,
         justifyContent: 'center',
         alignItems: 'center',

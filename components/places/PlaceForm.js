@@ -1,15 +1,34 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, ScrollView, TextInput, StyleSheet } from "react-native";
 import { Colors } from "../../constants/colors";
 import ImagePicker from "./ImagePicker";
 import LocationPicker from "./LocationPicker";
+import Button from "../ui/Button";
+import { getAddress } from "../../util/locations";
+import { Place } from "../../models/place";
 
 
-export default function PlaceForm(){
+export default function PlaceForm({onCreatePlace}){
     const [title, setTitle] = useState('');
+    const [location, setLocation] = useState();
+    const [image, setImage] = useState();
 
     function changeTitleHandler(enteredTitle){
         setTitle(enteredTitle);
+    }
+
+
+    const imageHandler = useCallback( (imageUri) => {
+        setImage(imageUri);
+    }, []);
+
+    const locationHandler = useCallback( (pickedLocation) => {
+        setLocation(pickedLocation);
+    }, []);
+
+    function savePlaceHandler(){
+        const placeData = new Place(title, image, location);
+        onCreatePlace(placeData);
     }
     
     return (
@@ -20,8 +39,9 @@ export default function PlaceForm(){
                     value = {title}
                 />
             </View>
-            <ImagePicker/>
-            <LocationPicker/>
+            <ImagePicker onImageTaken = {imageHandler}/>
+            <LocationPicker onLocationPicked = {locationHandler}/>
+            <Button onPress = {savePlaceHandler}>Add Place</Button>
         </ScrollView>
     );
 }
@@ -29,7 +49,9 @@ export default function PlaceForm(){
 const styles = StyleSheet.create({
     form: {
         flex: 1,
-        padding: 24
+        padding: 24,
+        
+
     },
     label: {
         fontWeight:'bold',
